@@ -7,7 +7,7 @@ import fcntl
 import os
 from pathlib import Path
 
-from vivorgb.errors import TransportError
+from asus_keylight.errors import TransportError
 
 _IOC_NRBITS = 8
 _IOC_TYPEBITS = 8

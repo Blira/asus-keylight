@@ -1,4 +1,4 @@
-from vivorgb.cli import main
+from asus_keylight.cli import main
 
 
 if __name__ == "__main__":

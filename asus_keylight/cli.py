@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 
-from vivorgb.controller import (
+from asus_keylight.controller import (
     apply_static_color,
     current_brightness,
     ensure_supported_model,
@@ -12,14 +12,14 @@ from vivorgb.controller import (
     run_apply,
     write_brightness,
 )
-from vivorgb.discovery import discover_keyboard
-from vivorgb.errors import DiscoveryError, TransportError, ValidationError, VivorgbError
-from vivorgb.protocol import Colour, find_lamp_array_report_ids, validate_brightness
-from vivorgb.transport import HidTransport
+from asus_keylight.discovery import discover_keyboard
+from asus_keylight.errors import AsusKeylightError, DiscoveryError, TransportError, ValidationError
+from asus_keylight.protocol import Colour, find_lamp_array_report_ids, validate_brightness
+from asus_keylight.transport import HidTransport
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="vivorgb")
+    parser = argparse.ArgumentParser(prog="asus-keylight")
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--force", action="store_true", help="ignore model mismatch")
     common.add_argument("--dry-run", action="store_true", help="print what would be sent without writing")
@@ -167,7 +167,7 @@ def main(argv: list[str] | None = None) -> int:
     except (DiscoveryError, TransportError, ValidationError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    except VivorgbError as exc:
+    except AsusKeylightError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     return 0

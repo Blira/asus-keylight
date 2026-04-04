@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from vivorgb.errors import DiscoveryError
-from vivorgb.models import KeyboardTarget
+from asus_keylight.errors import DiscoveryError
+from asus_keylight.models import KeyboardTarget
 
 DMI_ROOT = Path("/sys/devices/virtual/dmi/id")
 HIDRAW_ROOT = Path("/sys/class/hidraw")

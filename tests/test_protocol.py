@@ -1,7 +1,7 @@
 import unittest
 
-from vivorgb.errors import ValidationError
-from vivorgb.protocol import (
+from asus_keylight.errors import ValidationError
+from asus_keylight.protocol import (
     APPLY_PACKET,
     I2C_HID_REPORT_ID,
     LAMP_UPDATE_COMPLETE,

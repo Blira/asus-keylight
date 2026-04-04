@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from vivorgb.errors import ValidationError
+from asus_keylight.errors import ValidationError
 
 AURA_MSG_LEN = 17
 I2C_HID_REPORT_ID = 0x5F

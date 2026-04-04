@@ -1,4 +1,4 @@
-# vivorgb
+# asus-keylight
 
 CLI experimental para controlar o RGB do teclado do ASUS Vivobook S 14 `S5406SA`
 no Linux.
@@ -21,14 +21,66 @@ Os comandos suportados são:
 - `set-color RRGGBB`
 - `set-brightness 0|1|2|3`
 - `apply --color RRGGBB --brightness N`
+- `asus-keylight-gui` para abrir a interface gráfica
 
 ## Execução
 
 ```bash
-python3 -m vivorgb probe
-python3 -m vivorgb set-color ff5500 --dry-run
-python3 -m vivorgb set-brightness 3
-python3 -m vivorgb apply --color 00ffaa --brightness 2
+python3 -m asus_keylight probe
+python3 -m asus_keylight set-color ff5500 --dry-run
+python3 -m asus_keylight set-brightness 3
+python3 -m asus_keylight apply --color 00ffaa --brightness 2
+```
+
+## App gráfica
+
+A interface gráfica usa `tkinter`, então não adiciona dependências Python
+extras na maioria das distribuições.
+
+Instalação mais simples a partir de um clone:
+
+```bash
+./install.sh
+```
+
+Depois de instalar o projeto, você pode abrir a app com:
+
+```bash
+asus-keylight-gui
+```
+
+Para adicionar ao menu de aplicativos:
+
+```bash
+asus-keylight-install-desktop
+```
+
+Ou sem instalar scripts:
+
+```bash
+python3 -m asus_keylight.gui
+```
+
+Recursos da app:
+
+- seletor visual de cor;
+- presets prontos;
+- ajuste de brilho 0..3;
+- botão para aplicar só a cor ou cor + brilho;
+- preview maior com destaque da cor atual;
+- feedback de erro/status na própria janela.
+
+Instalação manual sem `install.sh`:
+
+```bash
+sudo apt install python3-tk
+python3 -m asus_keylight.install_desktop
+```
+
+Se `~/.local/bin` não estiver no seu `PATH`, execute diretamente:
+
+```bash
+python3 -m asus_keylight.gui
 ```
 
 ## Dependências
@@ -47,7 +99,7 @@ Para gravar no teclado RGB, você provavelmente precisará:
 
 O ajuste de brilho usa o sysfs padrão do ASUS e também pode exigir privilégios.
 
-Exemplo de regra `udev` incluído em `udev/99-vivorgb.rules`.
+Exemplo de regra `udev` incluído em `udev/99-asus-keylight.rules`.
 Para este modelo, a regra usa o nó HID pai `0018:0B05:19B6.0002` e atribui
 acesso ao grupo `plugdev`.
 

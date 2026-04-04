@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from vivorgb.discovery import EXPECTED_HID_ID, discover_keyboard
+from asus_keylight.discovery import EXPECTED_HID_ID, discover_keyboard
 
 
 class DiscoveryTests(unittest.TestCase):
@@ -41,9 +41,9 @@ class DiscoveryTests(unittest.TestCase):
             )
 
             with (
-                mock.patch("vivorgb.discovery.DMI_ROOT", dmi),
-                mock.patch("vivorgb.discovery.HIDRAW_ROOT", hidraw),
-                mock.patch("vivorgb.discovery.LED_ROOT", led),
+                mock.patch("asus_keylight.discovery.DMI_ROOT", dmi),
+                mock.patch("asus_keylight.discovery.HIDRAW_ROOT", hidraw),
+                mock.patch("asus_keylight.discovery.LED_ROOT", led),
             ):
                 target = discover_keyboard()
 

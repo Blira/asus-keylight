@@ -1,13 +1,18 @@
 [project]
-name = "vivorgb"
+name = "asus-keylight"
 version = "0.1.0"
-description = "Experimental RGB keyboard CLI for ASUS Vivobook S 14 S5406SA"
+description = "Keyboard lighting app and CLI for ASUS laptops on Linux"
 readme = "README.md"
 requires-python = ">=3.12"
+
+[project.scripts]
+asus-keylight = "asus_keylight.cli:main"
+asus-keylight-gui = "asus_keylight.gui:main"
+asus-keylight-install-desktop = "asus_keylight.install_desktop:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["vivorgb"]
+packages = ["asus_keylight"]

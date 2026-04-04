@@ -3,10 +3,10 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from vivorgb.discovery import discover_keyboard
-from vivorgb.errors import DiscoveryError, TransportError, ValidationError
-from vivorgb.models import KeyboardTarget
-from vivorgb.protocol import (
+from asus_keylight.discovery import discover_keyboard
+from asus_keylight.errors import DiscoveryError, TransportError, ValidationError
+from asus_keylight.models import KeyboardTarget
+from asus_keylight.protocol import (
     APPLY_PACKET,
     SET_PACKET,
     Colour,
@@ -21,7 +21,7 @@ from vivorgb.protocol import (
     validate_brightness,
     wrap_i2c_feature_report,
 )
-from vivorgb.transport import HidTransport
+from asus_keylight.transport import HidTransport
 
 
 def ensure_supported_model(target: KeyboardTarget, force: bool) -> None:
