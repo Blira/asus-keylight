@@ -19,7 +19,8 @@ controller or HID Lighting/LampArray interface, but that is not guaranteed.
 The project includes:
 
 - a CLI
-- a simple desktop GUI
+- a polished desktop GUI
+- a full-spectrum color picker with RGB inputs
 - a desktop launcher installer
 - a `udev` rule for non-root access to the keyboard HID device
 
