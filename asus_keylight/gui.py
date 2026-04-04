@@ -5,6 +5,7 @@ import colorsys
 from asus_keylight.controller import current_brightness, ensure_supported_model, max_brightness, run_apply
 from asus_keylight.discovery import discover_keyboard
 from asus_keylight.errors import AsusKeylightError, ValidationError
+from asus_keylight.state import load_state, save_state
 
 PRESET_COLOURS = [
     ("Sun", "ffcc00"),
@@ -85,6 +86,7 @@ class AsusKeylightApp:
         self._live_after_id = None
 
         self._configure_style()
+        self._load_saved_state()
         self._build_ui()
         self._render_spectrum()
         self._render_hue_bar()
@@ -457,6 +459,26 @@ class AsusKeylightApp:
         self.status.set(message)
         self.status_indicator.configure(bg=self.colors["error"] if is_error else self.colors["success"])
 
+    def _load_saved_state(self) -> None:
+        try:
+            state = load_state()
+        except ValidationError:
+            return
+        if state is None:
+            return
+
+        colour = state.get("color")
+        if isinstance(colour, str):
+            red, green, blue = self._hex_to_rgb(colour)
+            self.selected_colour.set(colour)
+            self.red_value.set(str(red))
+            self.green_value.set(str(green))
+            self.blue_value.set(str(blue))
+
+        brightness = state.get("brightness")
+        if isinstance(brightness, int):
+            self.brightness.set(brightness)
+
     def _set_theme(self, mode: str) -> None:
         self.theme_mode.set(mode)
         self.colors = THEMES[mode]
@@ -757,6 +779,7 @@ class AsusKeylightApp:
                 dry_run=False,
                 force=False,
             )
+            save_state(color=colour)
             self._set_status(f"Live #{colour.upper()}")
         except AsusKeylightError as exc:
             self._set_status(f"Error: {exc}", is_error=True)
@@ -794,6 +817,7 @@ class AsusKeylightApp:
                 dry_run=False,
                 force=False,
             )
+            save_state(color=colour, brightness=None if colour_only else brightness)
             if colour_only:
                 self._set_status(f"Applied #{colour.upper()}")
             else:

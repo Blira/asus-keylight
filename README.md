@@ -22,6 +22,7 @@ The project includes:
 - a polished desktop GUI
 - a full-spectrum color picker with RGB inputs
 - a live mode that applies color changes directly from the picker
+- automatic restore of the last saved lighting on login after reboot
 - a desktop launcher installer
 - a `udev` rule for non-root access to the keyboard HID device
 
@@ -85,6 +86,7 @@ What `install.sh` does:
 - reloads `udev`
 - installs local launchers in `~/.local/bin`
 - installs a desktop entry in `~/.local/share/applications`
+- installs an autostart entry in `~/.config/autostart` to restore the last saved lighting
 
 What the remote installer additionally does:
 
@@ -120,6 +122,7 @@ chmod +x uninstall.sh
 - `~/.local/bin/asus-keylight`
 - `~/.local/bin/asus-keylight-gui`
 - `~/.local/share/applications/asus-keylight.desktop`
+- `~/.config/autostart/asus-keylight-restore.desktop`
 - `/etc/udev/rules.d/99-asus-keylight.rules`
 
 After removing the `udev` rule, the script also reloads `udev`.
@@ -154,6 +157,7 @@ This creates:
 - `~/.local/bin/asus-keylight`
 - `~/.local/bin/asus-keylight-gui`
 - `~/.local/share/applications/asus-keylight.desktop`
+- `~/.config/autostart/asus-keylight-restore.desktop`
 
 ## Running The App
 
@@ -182,6 +186,7 @@ python3 -m asus_keylight probe
 python3 -m asus_keylight set-color ffcc00
 python3 -m asus_keylight set-brightness 3
 python3 -m asus_keylight apply --color 00ffaa --brightness 2
+python3 -m asus_keylight restore
 python3 -m asus_keylight set-color ff5500 --dry-run
 ```
 
@@ -191,6 +196,7 @@ Supported commands:
 - `set-color RRGGBB`
 - `set-brightness 0|1|2|3`
 - `apply --color RRGGBB --brightness N`
+- `restore`
 
 ## Permissions
 

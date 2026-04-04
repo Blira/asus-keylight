@@ -15,6 +15,7 @@ from asus_keylight.controller import (
 from asus_keylight.discovery import discover_keyboard
 from asus_keylight.errors import AsusKeylightError, DiscoveryError, TransportError, ValidationError
 from asus_keylight.protocol import Colour, find_lamp_array_report_ids, validate_brightness
+from asus_keylight.state import load_state
 from asus_keylight.transport import HidTransport
 
 
@@ -59,6 +60,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     apply_cmd.add_argument("--color", dest="color", help="hex RGB value")
     apply_cmd.add_argument("--brightness", dest="brightness", type=int, help="brightness level 0..3")
+
+    subparsers.add_parser(
+        "restore",
+        help="restore the last saved color and brightness",
+        parents=[common],
+    )
     return parser
 
 
@@ -151,6 +158,31 @@ def command_apply(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_restore(args: argparse.Namespace) -> int:
+    state = load_state()
+    if state is None:
+        raise ValidationError("no saved state found")
+
+    color = state.get("color")
+    brightness = state.get("brightness")
+    target, packets = run_apply(
+        colour_hex=str(color) if color is not None else None,
+        brightness=int(brightness) if brightness is not None else None,
+        dry_run=args.dry_run,
+        force=args.force,
+        preferred_backend=args.backend,
+    )
+    result = {
+        "hidraw_path": str(target.hidraw_path),
+        "brightness_path": str(target.brightness_path),
+        "color": color,
+        "brightness": brightness,
+        "packets": [packet_hex(packet) for packet in packets],
+    }
+    print(json.dumps(result, indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -163,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
             return command_set_brightness(args)
         if args.command == "apply":
             return command_apply(args)
+        if args.command == "restore":
+            return command_restore(args)
         parser.error(f"unknown command: {args.command}")
     except (DiscoveryError, TransportError, ValidationError) as exc:
         print(f"error: {exc}", file=sys.stderr)
