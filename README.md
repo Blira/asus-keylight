@@ -3,10 +3,10 @@
 `asus-keylight` is a small Linux app and CLI for controlling ASUS keyboard
 lighting.
 
-It was tested on an **ASUS Vivobook S 14 `S5406SA`** running Linux. The project
-targets the ASUS HID keyboard lighting controller exposed as `0B05:19B6`, so it
-may also work on other ASUS laptops that expose the same controller or HID
-Lighting/LampArray interface, but that is not guaranteed.
+It was tested on an **ASUS Vivobook S 14 `S5406SA`** running **Zorin OS**. The
+project targets the ASUS HID keyboard lighting controller exposed as
+`0B05:19B6`, so it may also work on other ASUS laptops that expose the same
+controller or HID Lighting/LampArray interface, but that is not guaranteed.
 
 ## What It Does
 
@@ -33,6 +33,8 @@ Possible compatibility:
 
 - other ASUS laptops using HID device `0B05:19B6`
 - other ASUS laptops exposing compatible HID Lighting/LampArray reports
+- Debian/Ubuntu-based distributions should be the smoothest path because the
+  install flow currently assumes `apt` and `python3-tk`
 
 Not guaranteed:
 
@@ -46,8 +48,12 @@ From a fresh clone:
 ```bash
 git clone <repo-url>
 cd asus-keylight
+chmod +x install.sh
 ./install.sh
 ```
+
+The `chmod` step is a safe fallback. In a normal git clone the executable bit
+should already be preserved, but including it avoids friction.
 
 What `install.sh` does:
 
