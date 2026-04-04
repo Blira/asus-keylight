@@ -74,6 +74,7 @@ class AsusKeylightApp:
         self.green_value = self.tk.StringVar(value="165")
         self.blue_value = self.tk.StringVar(value="233")
         self.brightness = self.tk.IntVar(value=1)
+        self.live_mode = self.tk.BooleanVar(value=False)
         self.status = self.tk.StringVar(value="Ready")
         self.device_label = self.tk.StringVar(value="Detecting keyboard...")
 
@@ -81,6 +82,7 @@ class AsusKeylightApp:
         self.current_saturation = 0.94
         self.current_value = 0.91
         self._syncing_inputs = False
+        self._live_after_id = None
 
         self._configure_style()
         self._build_ui()
@@ -331,6 +333,56 @@ class AsusKeylightApp:
 
         self._make_button(controls, text="Sync From RGB", command=self._apply_rgb_inputs).pack(fill="x", pady=(12, 0))
 
+        live_wrap = self.tk.Frame(controls, bg=self.colors["card_bg"])
+        live_wrap.pack(fill="x", pady=(12, 0))
+        self.live_wrap = live_wrap
+        self.live_mode_card = self.tk.Frame(
+            live_wrap,
+            bg=self.colors["field_bg"],
+            highlightbackground=self.colors["field_border"],
+            highlightthickness=1,
+            bd=0,
+        )
+        self.live_mode_card.pack(fill="x")
+        live_top = self.tk.Frame(self.live_mode_card, bg=self.colors["field_bg"])
+        live_top.pack(fill="x", padx=12, pady=(12, 4))
+        self.live_top = live_top
+        self.live_mode_title = self._make_label(
+            live_top,
+            "Live Mode",
+            size=11,
+            bold=True,
+            fg=self.colors["text"],
+            bg=self.colors["field_bg"],
+        )
+        self.live_mode_title.pack(side="left")
+        self.live_mode_button = self.tk.Button(
+            live_top,
+            text="OFF",
+            command=self._toggle_live_mode,
+            bg=self.colors["secondary"],
+            fg=self.colors["text"],
+            activebackground=self.colors["secondary_active"],
+            activeforeground=self.colors["text"],
+            relief="flat",
+            bd=0,
+            padx=14,
+            pady=6,
+            font=("Helvetica", 9, "bold"),
+            highlightthickness=0,
+            cursor="hand2",
+            width=6,
+        )
+        self.live_mode_button.pack(side="right")
+        self.live_mode_hint = self._make_label(
+            self.live_mode_card,
+            "Instantly applies color changes while you drag or edit values.",
+            size=10,
+            fg=self.colors["muted"],
+            bg=self.colors["field_bg"],
+        )
+        self.live_mode_hint.pack(anchor="w", padx=12, pady=(0, 12))
+
         brightness = self.tk.Frame(right, bg=self.colors["card_bg"])
         brightness.pack(fill="x", pady=(16, 0))
         self.brightness_wrap = brightness
@@ -430,6 +482,9 @@ class AsusKeylightApp:
         self.presets.configure(bg=c["card_bg"])
         self.controls.configure(bg=c["card_bg"])
         self.fields.configure(bg=c["card_bg"])
+        self.live_wrap.configure(bg=c["card_bg"])
+        self.live_mode_card.configure(bg=c["field_bg"], highlightbackground=c["field_border"])
+        self.live_top.configure(bg=c["field_bg"])
         self.brightness_wrap.configure(bg=c["card_bg"])
         self.actions.configure(bg=c["card_bg"])
         self.status_wrap.configure(bg=c["card_bg"])
@@ -438,6 +493,8 @@ class AsusKeylightApp:
         self.preview.configure(bg=c["preview_bg"])
         self.device_text.configure(bg=c["preview_bg"], fg=c["muted"])
         self.status_label.configure(bg=c["card_bg"], fg=c["muted"])
+        self.live_mode_title.configure(bg=c["field_bg"], fg=c["text"])
+        self.live_mode_hint.configure(bg=c["field_bg"], fg=c["muted"])
         self.spectrum_canvas.configure(bg=c["picker_bg"], highlightbackground=c["field_border"])
         self.hue_canvas.configure(bg=c["picker_bg"], highlightbackground=c["field_border"])
         self.preview.itemconfigure(self.preview_back, fill=c["field_bg"], outline=c["field_border"])
@@ -486,6 +543,7 @@ class AsusKeylightApp:
 
         self.brightness_scale.configure(style="Keylight.Horizontal.TScale")
         self._refresh_entries(self.fields)
+        self._refresh_live_mode_button()
         self._render_colour(self.selected_colour.get())
         self._set_status(self.status.get(), is_error=self.status.get().startswith("Error:"))
 
@@ -575,6 +633,7 @@ class AsusKeylightApp:
 
         self._render_colour(hex_value)
         self._update_picker_markers()
+        self._queue_live_apply()
 
     def _sync_from_hex(self, value: str) -> None:
         red, green, blue = self._hex_to_rgb(value)
@@ -629,6 +688,78 @@ class AsusKeylightApp:
         self.brightness.set(level)
         names = {0: "Off", 1: "Low", 2: "Medium", 3: "High"}
         self.brightness_value.configure(text=f"Level {level} · {names[level]}")
+
+    def _toggle_live_mode(self) -> None:
+        self.live_mode.set(not self.live_mode.get())
+        self._on_live_mode_toggle()
+
+    def _refresh_live_mode_button(self) -> None:
+        if self.live_mode.get():
+            self.live_mode_card.configure(
+                bg=self.colors["primary"],
+                highlightbackground=self.colors["primary"],
+            )
+            self.live_top.configure(bg=self.colors["primary"])
+            self.live_mode_title.configure(bg=self.colors["primary"], fg="#ffffff")
+            self.live_mode_hint.configure(bg=self.colors["primary"], fg="#d6ecff")
+            self.live_mode_button.configure(
+                text="ON",
+                bg="#ffffff",
+                fg=self.colors["primary"],
+                activebackground="#f2f8ff",
+                activeforeground=self.colors["primary"],
+            )
+        else:
+            self.live_mode_card.configure(
+                bg=self.colors["field_bg"],
+                highlightbackground=self.colors["field_border"],
+            )
+            self.live_top.configure(bg=self.colors["field_bg"])
+            self.live_mode_title.configure(bg=self.colors["field_bg"], fg=self.colors["text"])
+            self.live_mode_hint.configure(bg=self.colors["field_bg"], fg=self.colors["muted"])
+            self.live_mode_button.configure(
+                text="OFF",
+                bg=self.colors["secondary"],
+                fg=self.colors["text"],
+                activebackground=self.colors["secondary_active"],
+                activeforeground=self.colors["text"],
+            )
+
+    def _on_live_mode_toggle(self) -> None:
+        self._refresh_live_mode_button()
+        if self.live_mode.get():
+            self._set_status("Live mode enabled")
+            self._queue_live_apply(immediate=True)
+        else:
+            if self._live_after_id is not None:
+                self.root.after_cancel(self._live_after_id)
+                self._live_after_id = None
+            self._set_status("Live mode disabled")
+
+    def _queue_live_apply(self, *, immediate: bool = False) -> None:
+        if not self.live_mode.get() or self._syncing_inputs:
+            return
+        if self._live_after_id is not None:
+            self.root.after_cancel(self._live_after_id)
+            self._live_after_id = None
+        delay = 0 if immediate else 90
+        self._live_after_id = self.root.after(delay, self._run_live_apply)
+
+    def _run_live_apply(self) -> None:
+        self._live_after_id = None
+        if not self.live_mode.get():
+            return
+        try:
+            colour = self._normalize_colour(self.selected_colour.get())
+            run_apply(
+                colour_hex=colour,
+                brightness=None,
+                dry_run=False,
+                force=False,
+            )
+            self._set_status(f"Live #{colour.upper()}")
+        except AsusKeylightError as exc:
+            self._set_status(f"Error: {exc}", is_error=True)
 
     def set_colour(self, value: str) -> None:
         self._sync_from_hex(value)

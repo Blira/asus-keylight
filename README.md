@@ -21,6 +21,7 @@ The project includes:
 - a CLI
 - a polished desktop GUI
 - a full-spectrum color picker with RGB inputs
+- a live mode that applies color changes directly from the picker
 - a desktop launcher installer
 - a `udev` rule for non-root access to the keyboard HID device
 
