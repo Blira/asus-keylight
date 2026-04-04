@@ -1,112 +1,170 @@
 # asus-keylight
 
-CLI experimental para controlar o RGB do teclado do ASUS Vivobook S 14 `S5406SA`
-no Linux.
+`asus-keylight` is a small Linux app and CLI for controlling ASUS keyboard
+lighting.
 
-O projeto detecta:
+It was tested on an **ASUS Vivobook S 14 `S5406SA`** running Linux. The project
+targets the ASUS HID keyboard lighting controller exposed as `0B05:19B6`, so it
+may also work on other ASUS laptops that expose the same controller or HID
+Lighting/LampArray interface, but that is not guaranteed.
 
-- o modelo da máquina via DMI;
-- o controlador HID `0B05:19B6`;
-- o backlight padrão exposto em `/sys/class/leds/asus::kbd_backlight`.
-- suporte HID Lighting/LampArray no `report_descriptor`, quando disponível.
+## What It Does
 
-Na implementação atual, a CLI:
+- detects the machine model through DMI
+- detects the ASUS keyboard HID controller `0B05:19B6`
+- uses the standard ASUS brightness node at `/sys/class/leds/asus::kbd_backlight`
+- prefers HID Lighting/LampArray when the device advertises it
+- falls back to the older ASUS `0x5D B3/B4/B5` packet path when needed
 
-- prefere o protocolo HID Lighting/LampArray quando o teclado o anuncia;
-- usa o fallback antigo de pacotes ASUS `0x5D B3/B4/B5` quando o LampArray não existe.
+The project includes:
 
-Os comandos suportados são:
+- a CLI
+- a simple desktop GUI
+- a desktop launcher installer
+- a `udev` rule for non-root access to the keyboard HID device
 
-- `probe`
-- `set-color RRGGBB`
-- `set-brightness 0|1|2|3`
-- `apply --color RRGGBB --brightness N`
-- `asus-keylight-gui` para abrir a interface gráfica
+## Tested Hardware
 
-## Execução
+Confirmed working on:
+
+- ASUS Vivobook S 14 `S5406SA`
+
+Possible compatibility:
+
+- other ASUS laptops using HID device `0B05:19B6`
+- other ASUS laptops exposing compatible HID Lighting/LampArray reports
+
+Not guaranteed:
+
+- any ASUS laptop not using the same HID interface
+- non-ASUS laptops
+
+## Quick Install
+
+From a fresh clone:
 
 ```bash
-python3 -m asus_keylight probe
-python3 -m asus_keylight set-color ff5500 --dry-run
-python3 -m asus_keylight set-brightness 3
-python3 -m asus_keylight apply --color 00ffaa --brightness 2
-```
-
-## App gráfica
-
-A interface gráfica usa `tkinter`, então não adiciona dependências Python
-extras na maioria das distribuições.
-
-Instalação mais simples a partir de um clone:
-
-```bash
+git clone <repo-url>
+cd asus-keylight
 ./install.sh
 ```
 
-Depois de instalar o projeto, você pode abrir a app com:
+What `install.sh` does:
+
+- installs `python3-tk` on Debian/Ubuntu systems
+- installs the `udev` rule from [`udev/99-asus-keylight.rules`](udev/99-asus-keylight.rules)
+- reloads `udev`
+- installs local launchers in `~/.local/bin`
+- installs a desktop entry in `~/.local/share/applications`
+
+After installation, run:
 
 ```bash
 asus-keylight-gui
 ```
 
-Para adicionar ao menu de aplicativos:
+Or open `ASUS Keylight` from your app menu.
 
-```bash
-asus-keylight-install-desktop
-```
-
-Ou sem instalar scripts:
+If `~/.local/bin` is not in your `PATH`, run the GUI directly:
 
 ```bash
 python3 -m asus_keylight.gui
 ```
 
-Recursos da app:
+## Manual Install
 
-- seletor visual de cor;
-- presets prontos;
-- ajuste de brilho 0..3;
-- botão para aplicar só a cor ou cor + brilho;
-- preview maior com destaque da cor atual;
-- feedback de erro/status na própria janela.
-
-Instalação manual sem `install.sh`:
+If you do not want to use `install.sh`:
 
 ```bash
 sudo apt install python3-tk
+sudo install -m 0644 udev/99-asus-keylight.rules /etc/udev/rules.d/99-asus-keylight.rules
+sudo udevadm control --reload
+sudo udevadm trigger /dev/hidraw1
 python3 -m asus_keylight.install_desktop
 ```
 
-Se `~/.local/bin` não estiver no seu `PATH`, execute diretamente:
+This creates:
+
+- `~/.local/bin/asus-keylight`
+- `~/.local/bin/asus-keylight-gui`
+- `~/.local/share/applications/asus-keylight.desktop`
+
+## Running The App
+
+GUI:
+
+```bash
+asus-keylight-gui
+```
+
+Direct module launch:
 
 ```bash
 python3 -m asus_keylight.gui
 ```
 
-## Dependências
+App menu:
 
-Nenhuma dependência externa é obrigatória.
+- search for `ASUS Keylight`
 
-Se `python3-hid` ou `python3-hidapi` estiverem instalados, a CLI tenta usar
-`hidapi` primeiro. Caso contrário, usa `hidraw` com `ioctl` diretamente.
+## CLI Usage
 
-## Permissões
+Examples:
 
-Para gravar no teclado RGB, você provavelmente precisará:
+```bash
+python3 -m asus_keylight probe
+python3 -m asus_keylight set-color ffcc00
+python3 -m asus_keylight set-brightness 3
+python3 -m asus_keylight apply --color 00ffaa --brightness 2
+python3 -m asus_keylight set-color ff5500 --dry-run
+```
 
-- executar com `sudo`, ou
-- instalar uma regra `udev` para permitir acesso ao `hidraw` correspondente.
+Supported commands:
 
-O ajuste de brilho usa o sysfs padrão do ASUS e também pode exigir privilégios.
+- `probe`
+- `set-color RRGGBB`
+- `set-brightness 0|1|2|3`
+- `apply --color RRGGBB --brightness N`
 
-Exemplo de regra `udev` incluído em `udev/99-asus-keylight.rules`.
-Para este modelo, a regra usa o nó HID pai `0018:0B05:19B6.0002` e atribui
-acesso ao grupo `plugdev`.
+## Permissions
 
-## Limitações conhecidas
+To write keyboard color changes without `sudo`, the HID device must be writable
+by your user.
 
-- A ASUS não publica suporte oficial para esse modelo no Linux.
-- O protocolo `19b6` é compatível com muitos notebooks ASUS, mas o `S5406SA`
-  ainda não foi validado upstream.
-- O ambiente atual não expõe `/dev/hidraw*`, então a validação completa de
-  escrita no dispositivo precisa ser feita no host real.
+This repository includes a `udev` rule in
+[`udev/99-asus-keylight.rules`](udev/99-asus-keylight.rules) that
+grants access to the matching ASUS keyboard HID device.
+
+On the tested laptop, the rule matches HID parent `0018:0B05:19B6.0002` and
+assigns access through the `plugdev` group.
+
+Brightness changes use the standard ASUS sysfs backlight node and may also
+require appropriate permissions depending on your system setup.
+
+## Dependencies
+
+Required:
+
+- Python 3.12+
+- `tkinter` for the GUI
+
+Optional:
+
+- `python3-hid` or `python3-hidapi`
+
+If `hidapi` is available, the project tries that backend first. Otherwise it
+uses `hidraw` with `ioctl` directly.
+
+## Known Limitations
+
+- ASUS does not provide official Linux support for this lighting interface.
+- The project was validated on `S5406SA`, not across the full ASUS laptop range.
+- Some ASUS models may require a different HID protocol or report layout.
+- The desktop launcher created by this project runs the code from the cloned
+  repository path, so if you move or delete the clone, reinstall the launcher.
+
+## Development Notes
+
+This project currently favors practical local installation from a git clone over
+system-wide packaging. That keeps installation simple on Debian/Ubuntu systems
+that enforce PEP 668 restrictions on `pip`.
