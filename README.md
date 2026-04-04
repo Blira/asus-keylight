@@ -43,6 +43,27 @@ Not guaranteed:
 
 ## Quick Install
 
+Without cloning the repository:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Blira/asus-keylight/main/scripts/install-remote.sh)
+```
+
+This downloads the project into `~/.local/share/asus-keylight` and then runs
+the normal local installer.
+
+To update that remote install later:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Blira/asus-keylight/main/scripts/update-remote.sh)
+```
+
+To remove that remote install completely:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Blira/asus-keylight/main/scripts/uninstall-remote.sh)
+```
+
 From a fresh clone:
 
 ```bash
@@ -62,6 +83,12 @@ What `install.sh` does:
 - reloads `udev`
 - installs local launchers in `~/.local/bin`
 - installs a desktop entry in `~/.local/share/applications`
+
+What the remote installer additionally does:
+
+- downloads the repository archive from GitHub
+- stores the app under `~/.local/share/asus-keylight`
+- makes future remote update and remote uninstall possible
 
 After installation, run:
 
@@ -98,6 +125,15 @@ After removing the `udev` rule, the script also reloads `udev`.
 The uninstall script does not delete the cloned repository directory itself. If
 you also want to remove the source checkout, delete the project directory
 manually after running the script.
+
+If you installed with the remote no-clone flow, use:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Blira/asus-keylight/main/scripts/uninstall-remote.sh)
+```
+
+That removes the local launchers, desktop entry, `udev` rule, and the downloaded
+application directory under `~/.local/share/asus-keylight`.
 
 ## Manual Install
 
