@@ -77,6 +77,28 @@ If `~/.local/bin` is not in your `PATH`, run the GUI directly:
 python3 -m asus_keylight.gui
 ```
 
+## Uninstall
+
+To remove the local install created by this project:
+
+```bash
+chmod +x uninstall.sh
+./uninstall.sh
+```
+
+`uninstall.sh` removes:
+
+- `~/.local/bin/asus-keylight`
+- `~/.local/bin/asus-keylight-gui`
+- `~/.local/share/applications/asus-keylight.desktop`
+- `/etc/udev/rules.d/99-asus-keylight.rules`
+
+After removing the `udev` rule, the script also reloads `udev`.
+
+The uninstall script does not delete the cloned repository directory itself. If
+you also want to remove the source checkout, delete the project directory
+manually after running the script.
+
 ## Manual Install
 
 If you do not want to use `install.sh`:
