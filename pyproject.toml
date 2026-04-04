@@ -1,0 +1,13 @@
+[project]
+name = "vivorgb"
+version = "0.1.0"
+description = "Experimental RGB keyboard CLI for ASUS Vivobook S 14 S5406SA"
+readme = "README.md"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["vivorgb"]
