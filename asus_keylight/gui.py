@@ -830,9 +830,9 @@ def main() -> int:
     try:
         import tkinter as tk
         from tkinter import ttk
-    except ModuleNotFoundError as exc:
+    except ImportError as exc:
         raise SystemExit(
-            "tkinter is not installed. Install the distro package first, for example: sudo apt install python3-tk"
+            "Tkinter could not load. Install tk on CachyOS/Arch or python3-tk on Debian/Ubuntu."
         ) from exc
 
     root = tk.Tk()

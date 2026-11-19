@@ -1,0 +1,2 @@
+# Set the tag before systemd's 73-seat-late.rules applies the session ACL.
+SUBSYSTEM=="hidraw", KERNELS=="0018:0B05:19B6.*", TAG+="uaccess"

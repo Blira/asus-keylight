@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import subprocess
 import time
-from pathlib import Path
 
 from asus_keylight.discovery import discover_keyboard
 from asus_keylight.errors import DiscoveryError, TransportError, ValidationError
@@ -44,8 +44,31 @@ def write_brightness(target: KeyboardTarget, value: int) -> None:
     validated = validate_brightness(value)
     try:
         target.brightness_path.write_text(f"{validated}\n", encoding="utf-8")
+    except PermissionError as exc:
+        led = target.brightness_led_path
+        # The legacy UPower endpoint picks a keyboard LED automatically.
+        if list(led.parent.glob("*kbd_backlight*")) != [led]:
+            raise TransportError(f"cannot write brightness to {target.brightness_path}: {exc}") from exc
     except OSError as exc:
         raise TransportError(f"cannot write brightness to {target.brightness_path}: {exc}") from exc
+    else:
+        return
+
+    try:
+        result = subprocess.run(
+            [
+                "busctl", "--system", "--timeout=3s", "call", "org.freedesktop.UPower",
+                "/org/freedesktop/UPower/KbdBacklight", "org.freedesktop.UPower.KbdBacklight",
+                "SetBrightness", "i", str(validated),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=4,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise TransportError(f"cannot set keyboard brightness through UPower: {exc}") from exc
+    if result.returncode:
+        raise TransportError(f"cannot set keyboard brightness through UPower: {result.stderr.strip()}")
 
 
 def detect_lamp_array(target: KeyboardTarget) -> LampArrayInfo | None:

@@ -26,18 +26,31 @@ The project includes:
 - a desktop launcher installer
 - a `udev` rule for non-root access to the keyboard HID device
 
+## Supported Distributions
+
+| Distribution family | Installer | Packages |
+| --- | --- | --- |
+| Zorin OS, Ubuntu and Debian | `apt` | `python3-tk`, `upower` |
+| CachyOS and Arch Linux | `pacman` | `tk`, `upower` |
+
+Use the same install or update command on either family. Run it as your
+regular desktop user. The installer invokes `sudo` for packages and the
+`udev` rule.
+
 ## Tested Hardware
 
 Confirmed working on:
 
 - ASUS Vivobook S 14 `S5406SA`
 
+On CachyOS, this model exposes the same I²C HID LampArray device and the same
+keyboard brightness LED as on Zorin OS. The installer supports CachyOS and
+Arch Linux, and keyboard brightness can be set through UPower.
+
 Possible compatibility:
 
 - other ASUS laptops using HID device `0B05:19B6`
 - other ASUS laptops exposing compatible HID Lighting/LampArray reports
-- Debian/Ubuntu-based distributions should be the smoothest path because the
-  install flow currently assumes `apt` and `python3-tk`
 
 Not guaranteed:
 
@@ -70,7 +83,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/Blira/asus-keylight/main/scr
 From a fresh clone:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Blira/asus-keylight.git
 cd asus-keylight
 chmod +x install.sh
 ./install.sh
@@ -81,9 +94,10 @@ should already be preserved, but including it avoids friction.
 
 What `install.sh` does:
 
-- installs `python3-tk` on Debian/Ubuntu systems
-- installs the `udev` rule from [`udev/99-asus-keylight.rules`](udev/99-asus-keylight.rules)
-- reloads `udev`
+- installs `python3-tk` and `upower` on Zorin OS, Debian and Ubuntu
+- installs `tk` and `upower` on CachyOS/Arch Linux
+- installs [`udev/70-asus-keylight.rules`](udev/70-asus-keylight.rules) and removes the old `99-asus-keylight.rules`
+- reloads `udev` and reapplies rules to the matching HID devices
 - installs local launchers in `~/.local/bin`
 - installs a desktop entry in `~/.local/share/applications`
 - installs an autostart entry in `~/.config/autostart` to restore the last saved lighting
@@ -123,7 +137,7 @@ chmod +x uninstall.sh
 - `~/.local/bin/asus-keylight-gui`
 - `~/.local/share/applications/asus-keylight.desktop`
 - `~/.config/autostart/asus-keylight-restore.desktop`
-- `/etc/udev/rules.d/99-asus-keylight.rules`
+- `/etc/udev/rules.d/70-asus-keylight.rules` and the legacy `99-asus-keylight.rules`
 
 After removing the `udev` rule, the script also reloads `udev`.
 
@@ -142,13 +156,28 @@ application directory under `~/.local/share/asus-keylight`.
 
 ## Manual Install
 
-If you do not want to use `install.sh`:
+For a manual installation, install the packages for your distribution.
+
+CachyOS and Arch Linux
 
 ```bash
-sudo apt install python3-tk
-sudo install -m 0644 udev/99-asus-keylight.rules /etc/udev/rules.d/99-asus-keylight.rules
+sudo pacman -S --needed tk upower
+```
+
+Zorin OS, Debian and Ubuntu
+
+```bash
+sudo apt update
+sudo apt install python3-tk upower
+```
+
+Then run these commands from the project directory on either family.
+
+```bash
+sudo install -m 0644 udev/70-asus-keylight.rules /etc/udev/rules.d/70-asus-keylight.rules
+sudo rm -f /etc/udev/rules.d/99-asus-keylight.rules
 sudo udevadm control --reload
-sudo udevadm trigger /dev/hidraw1
+sudo udevadm trigger --subsystem-match=hidraw --settle
 python3 -m asus_keylight.install_desktop
 ```
 
@@ -204,20 +233,20 @@ To write keyboard color changes without `sudo`, the HID device must be writable
 by your user.
 
 This repository includes a `udev` rule in
-[`udev/99-asus-keylight.rules`](udev/99-asus-keylight.rules) that
-grants access to the matching ASUS keyboard HID device.
+[`udev/70-asus-keylight.rules`](udev/70-asus-keylight.rules) that tags
+HID devices with the matching I²C vendor and product IDs for access by the
+active local session through systemd-logind. Run the GUI and CLI as your
+normal user from that session.
 
-On the tested laptop, the rule matches HID parent `0018:0B05:19B6.0002` and
-assigns access through the `plugdev` group.
-
-Brightness changes use the standard ASUS sysfs backlight node and may also
-require appropriate permissions depending on your system setup.
+Brightness changes use the ASUS sysfs backlight node directly when it is
+writable. When direct access is denied and it is the only keyboard
+backlight exposed in sysfs, the app calls UPower through `busctl`.
 
 ## Dependencies
 
 Required:
 
-- Python 3.12+
+- Python 3.10+
 - `tkinter` for the GUI
 
 Optional:
